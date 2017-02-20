@@ -1,3 +1,8 @@
+---
+post_title: test3
+layout: post
+---
+
 ```html
 <html>
  	<p>echo "not evil"</p>
