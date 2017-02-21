@@ -8,13 +8,11 @@ layout: post
 permalink: 'http://52.78.225.187/2017/02/21/jpasskit-%ec%a0%81%ec%9a%a9%ec%a4%91-%ec%98%a4%eb%a5%98-%eb%b0%9c%ec%83%9d/'
 published: true
 medium_post:
-  - 'O:11:"Medium_Post":11:{s:16:"author_image_url";N;s:10:"author_url";N;s:11:"byline_name";N;s:12:"byline_email";N;s:10:"cross_link";s:3:"yes";s:2:"id";N;s:21:"follower_notification";s:2:"no";s:7:"license";s:19:"all-rights-reserved";s:14:"publication_id";s:2:"-1";s:6:"status";s:5:"draft";s:3:"url";N;}'
+  - 'O:11:"Medium_Post":11:{s:16:"author_image_url";s:74:"https://cdn-images-1.medium.com/fit/c/200/200/1*AF4W2zIiN9sHi6zSId7oSw.png";s:10:"author_url";s:37:"https://medium.com/@hyeonhomartinkang";s:11:"byline_name";N;s:12:"byline_email";N;s:10:"cross_link";s:3:"yes";s:2:"id";s:12:"cbb66025b0fd";s:21:"follower_notification";s:2:"no";s:7:"license";s:19:"all-rights-reserved";s:14:"publication_id";s:2:"-1";s:6:"status";s:5:"draft";s:3:"url";s:50:"https://medium.com/@hyeonhomartinkang/cbb66025b0fd";}'
 ---
 서비스에서 ios wallet을 제공하려고 하니, 예전과는 다르게 서버단 통신을 통해 인증받는 절차가 추가로 생겼단다. <span style="font-size: 18px;">다만, 애플에서 제공하는 서버쪽 [데모](https://developer.apple.com/library/content/documentation/UserExperience/Conceptual/PassKit_PG/index.html#//apple_ref/doc/uid/TP40012195)를 보면 ruby로 만들어져있다.</span>
 
-왜 하필 루비인가? swift도 아니고... 여튼 그걸 java로 porting하려니 이미 만들어 놓은 것이 있을 것 같아서 구글링했더니,
-[jpasskit](https://www.google.co.kr/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=1&amp;cad=rja&amp;uact=8&amp;ved=0ahUKEwiU65GN3q3RAhWBQZQKHbGAAZYQFgggMAA&amp;url=https%3A%2F%2Fgithub.com%2Fdrallgood%2Fjpasskit&amp;usg=AFQjCNH6lvlwdYkacoqqVValEtwGNUYG3w)이
-그나마 제일 fork도 많이 되고, 사용도 하는 것 같아서 lib dependency를 추가했다.
+왜 하필 루비인가? swift도 아니고... 여튼 그걸 java로 porting하려니 이미 만들어 놓은 것이 있을 것 같아서 구글링했더니, [jpasskit](https://www.google.co.kr/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=1&amp;cad=rja&amp;uact=8&amp;ved=0ahUKEwiU65GN3q3RAhWBQZQKHbGAAZYQFgggMAA&amp;url=https%3A%2F%2Fgithub.com%2Fdrallgood%2Fjpasskit&amp;usg=AFQjCNH6lvlwdYkacoqqVValEtwGNUYG3w)이 그나마 제일 fork도 많이 되고, 사용도 하는 것 같아서 lib dependency를 추가했다.
 <pre class="lang:default decode:true">&lt;!-- PassKit --&gt;
 &lt;dependency&gt;
     &lt;groupId&gt;de.brendamour&lt;/groupId&gt;
@@ -22,9 +20,7 @@ medium_post:
     &lt;version&gt;0.0.8&lt;/version&gt;
 &lt;/dependency&gt;</pre>
 개발을 완료했는데, Test Case에서 오류가 나타나기 시작했다.
-<pre class="lang:sh decode:true">com.fasterxml.jackson.databind.JsonMappingException: ↵
-Can not resolve PropertyFilter with id 'validateFilter'; ↵
-no FilterProvider configured</pre>
+<pre class="lang:sh decode:true">com.fasterxml.jackson.databind.JsonMappingException: Can not resolve PropertyFilter with id 'validateFilter'; no FilterProvider configured</pre>
 난 jackson filter를 바꾼 적이 없는데 왜 에러가 나는 것인가? 처음에는 [jpasskit issue](https://github.com/drallgood/jpasskit/issues/38)를 보고 jackson lib의 version 호환성 문제가 있는 것 같아서 아래처럼 dependency처리를 했다.
 <pre class="lang:yaml decode:true">&lt;!-- PassKit --&gt;
 &lt;dependency&gt;
@@ -45,9 +41,7 @@ no FilterProvider configured</pre>
 @Bean
 public ObjectMapper objectMapper() {
     ObjectMapper objectMapper = new CustomObjectMapper();
-    
     initializeObjectMapper(objectMapper);
-
     return objectMapper;
 }</pre>
 그래서 Object Mapper는 singleton으로 재사용하고 있는데, jpasskit은 Object Mapper를 변조시키고 있다.
@@ -62,9 +56,7 @@ public ObjectMapper objectMapper() {
     public PKFileBasedSigningUtil(ObjectMapper objectMapper) {
         this.addBCProvider();
         this.objectWriter = this.configureObjectMapper(objectMapper);
-    }
-
-    ...</pre>
+    }</pre>
 <pre class="lang:java decode:true">protected ObjectWriter configureObjectMapper(ObjectMapper jsonObjectMapper) {
     jsonObjectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     jsonObjectMapper.setDateFormat(new ISO8601DateFormat());
@@ -87,8 +79,6 @@ public ObjectMapper objectMapper() {
 
 jpasskit에서 사용하는 object mapper는 특별한 설정이 필요한 것은 아니라, bean을 사용하지 않고 기본 object mapper를 생성해서 넘기는 식으로 수정하였다.
 <pre class="lang:java decode:true">private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-...
 
 private byte[] createPKPassBinaries(PKPass pass, PKSigningInformation pkSigningInformation, InputStream thumbnail, InputStream thumbnail2x) throws Exception {
     return new PKFileBasedSigningUtil(OBJECT_MAPPER).createSignedAndZippedPkPassArchive(pass, createPKPassTemplate(thumbnail, thumbnail2x), pkSigningInformation);
