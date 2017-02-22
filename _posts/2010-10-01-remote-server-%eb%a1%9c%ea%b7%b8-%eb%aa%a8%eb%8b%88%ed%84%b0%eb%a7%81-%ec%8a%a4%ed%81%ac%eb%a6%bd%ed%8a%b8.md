@@ -1,0 +1,13 @@
+---
+ID: 575
+post_title: >
+  remote server 로그 모니터링
+  스크립트
+author: ""
+post_date: 2010-10-01 06:11:01
+post_excerpt: ""
+layout: post
+permalink: 'http://52.78.225.187/2010/10/01/remote-server-%eb%a1%9c%ea%b7%b8-%eb%aa%a8%eb%8b%88%ed%84%b0%eb%a7%81-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8/'
+published: true
+---
+<P>관리하는 서비스에서 오류를 확인하기 위해서 스크립트를 만들었다.<BR><BR>[code]#!/bin/sh<BR>today=<code>date "+%Y%m%d"</code><BR>log_file='apache.log' tail -f $log_file.$today | awk '($9 != 200 &amp;&amp; $9 != 302 &amp;&amp; $9 != 304) {print $0}'<BR>[/code]<BR>[code]#!/bin/sh<BR>log_file='catalina.out'<BR>tail -f $log_file | awk '/ERROR/ || /WARN/ || /Exception/ {print $0}'<BR>[/code]<BR>아파치의 경우에는 로테이트 로그 되므로 날짜를 지정하게 했다.<BR><BR>200, 302, 304 status code는 정상이므로 걸러내고, 나머지에 대해서만 필터링해서 출력하는 코드이다.<BR><BR>톰캣의 경우에는 그냥 파일이름만 있으면 된다.<BR><BR>대충 ERROR나 WARN 혹은 Exception이라는 문자열을 기준으로 필터링해서 출력하는 코드이다.<BR><BR><BR>위 코드에는 한 가지 문제가 있다.<BR><BR>서버가 5대라면, 각기 5(서버수) x 2(톰캣, 아파치) = 10개의 터미널 창이 필요하다.<BR><BR>실제로 예전에는 저렇게 진행했다.<BR><BR>그런데, 서버가 더 늘어나자... 이건 터미널 창이 기하급수적으로 늘어난다.<BR><BR>그래서 ssh를 통해 한 곳에서 여러 원격 서버의 로그를 확인할 수 있는 스크립트를 작성했다.<BR><BR>[code]#!/bin/sh<BR>today=<code>date "+%Y%m%d"</code><BR>log_file='apache.log'<BR>for server in "free01" "free02" "free03" "free04" "free05"<BR>do<BR>&nbsp; &nbsp; ssh <A href="mailto:freeism@$server" target="">freeism@$server</A> "tail -f $log_file.$today" | awk -v server=$server '($9 != 200 &amp;&amp; $9 != 302 &amp;&amp;&nbsp; $9 != 304) <BR>print "["server"]", $0}'&amp;<BR>done<BR>[/code]<BR>[code]#!/bin/sh<BR>log_file='catalina.out'<BR>for server in "free01" "free02" "free03" "free04" "free05"<BR>do<BR>&nbsp; &nbsp; ssh freeism@$server "tail -f $log_path/$log_file" | awk -v server=$server '(/ERROR/ || /WARN/ || /Exception/) {print "["server"]", $0}'&amp;<BR>done<BR>[/code]<BR>[code]#!/bin/sh<BR>kill <code>ps aux | grep "ssh &lt;A href="mailto:freeism@free0" target=""&gt;freeism@free0&lt;/A&gt;" | grep -v grep | awk '{print $2}'</code><BR>[/code]<BR>첫번째는 아파치, 두번째는 톰캣 로그를 확인하는 거다.<BR><BR>백그라운드 작업(&amp;)가 들어가기 때문에, 나중에 kill 할 때 번거로움이 있어서<BR><BR>세번째 스크립트로 kill 할 수 있도록 했다. (아파치, 톰캣 로그 찍는 것 모두 kill 된다)<BR><BR>참고로 awk 에서 -v 옵션은 파라미터 인자를 주는 건데,<BR><BR>sh에서 사용하는 변수 값을 awk 내부에서 사용할 수가 없다.<BR><BR>그래서 해당 변수값을 다시 지정해서 awk에서 사용할 수 있게 한거다.<BR><BR>위처럼 하면, 서버가 아무리 많아도 터미널 3개로 충분하다. (아파치 로그, 톰캣 로그, kill 할 터미널)<BR><BR>기본은 위와 같고, 서버이름이나, 필터링할 조건은 <A href="http://wiki.kldp.org/wiki.php/Awk" target=_blank>awk</A>와 <A href="http://wiki.kldp.org/wiki.php/ShellProgrammingTutorial" target=_blank>쉘프로그래밍</A>에 대해서 공부하면 된다.</P>
