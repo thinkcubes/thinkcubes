@@ -9,6 +9,9 @@ permalink: 'http://52.78.225.187/2017/02/21/jpasskit-%ec%a0%81%ec%9a%a9%ec%a4%91
 published: true
 medium_post:
   - 'O:11:"Medium_Post":11:{s:16:"author_image_url";s:74:"https://cdn-images-1.medium.com/fit/c/200/200/1*AF4W2zIiN9sHi6zSId7oSw.png";s:10:"author_url";s:37:"https://medium.com/@hyeonhomartinkang";s:11:"byline_name";N;s:12:"byline_email";N;s:10:"cross_link";s:3:"yes";s:2:"id";s:12:"cbb66025b0fd";s:21:"follower_notification";s:2:"no";s:7:"license";s:19:"all-rights-reserved";s:14:"publication_id";s:2:"-1";s:6:"status";s:5:"draft";s:3:"url";s:50:"https://medium.com/@hyeonhomartinkang/cbb66025b0fd";}'
+  - ""
+total_sidebar_layout:
+  - right_sidebar
 ---
 서비스에서 ios wallet을 제공하려고 하니, 예전과는 다르게 서버단 통신을 통해 인증받는 절차가 추가로 생겼단다. <span style="font-size: 18px;">다만, 애플에서 제공하는 서버쪽 [데모](https://developer.apple.com/library/content/documentation/UserExperience/Conceptual/PassKit_PG/index.html#//apple_ref/doc/uid/TP40012195)를 보면 ruby로 만들어져있다.</span>
 
